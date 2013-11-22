@@ -1,12 +1,13 @@
 package scheduler;
 
+import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -42,6 +43,10 @@ public class ClientWindow {
     private JTable tableTimes;
     private String[] colsTimes = {"Time Slots"};
     private DefaultTableModel tableModelTimes;
+    private JPanel polls;
+    
+    private ArrayList<String> participants;
+    private ArrayList<String> times;
 
     /**
      * Launch the application.
@@ -259,10 +264,22 @@ public class ClientWindow {
         tableParticipants = new JTable();
         scrollPaneParticipants.setViewportView(tableParticipants);
         
+        panelPolls.setLayout(new BorderLayout(4, 4));
+        
+        polls = new JPanel(new GridLayout(0, 1, 3, 3));
+        panelPolls.add(new JScrollPane(polls), BorderLayout.CENTER);
+        
+        participants = new ArrayList<String>();
+        times = new ArrayList<String>();
+        
         resetForm();
     }
     
+    @SuppressWarnings("unchecked")
     public void resetForm() {
+        participants.clear();
+        times.clear();
+        
         textFieldName.setText("");
         textFieldTime.setText("");
         
@@ -280,8 +297,10 @@ public class ClientWindow {
         comboBoxParticipants.setModel(new DefaultComboBoxModel(comboBoxItems.toArray()));
     }
     
+    @SuppressWarnings("unchecked")
     public void addParticipant(Object participant, int index) {
         comboBoxItems.remove(index);
+        participants.add((String) participant);
         System.out.println(index + Arrays.asList(comboBoxItems).toString());
         comboBoxParticipants.setModel(new DefaultComboBoxModel(comboBoxItems.toArray()));
         comboBoxParticipants.repaint();
@@ -292,6 +311,7 @@ public class ClientWindow {
     }
     
     public void addTime(String time) {
+        times.add(time);
         textFieldTime.setText("");
         String[] row = {time};
         tableModelTimes.addRow(row);
@@ -300,6 +320,13 @@ public class ClientWindow {
     }
     
     public void submitForm() {
+        PollPanel panelPoll = new PollPanel();
+        Poll poll = new Poll(textFieldName.getText(), names.get(cid), participants, times);
+        panelPoll.setPoll(poll);
         
+        polls.add(panelPoll);
+        polls.revalidate();
+        polls.repaint();
+        resetForm();
     }
 }
