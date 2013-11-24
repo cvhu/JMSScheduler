@@ -15,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.table.DefaultTableModel;
 
+@SuppressWarnings("serial")
 public class PollPanel extends JPanel {
 
     private Poll poll;

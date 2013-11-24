@@ -36,6 +36,7 @@ public class Admin {
             jndiCtx.bind(line, queue);
             line = reader.readLine();
         }
+        reader.close();
         jndiCtx.close();
         AdminModule.disconnect();
     }

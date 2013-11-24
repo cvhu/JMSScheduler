@@ -1,13 +1,15 @@
 package scheduler;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
+import javax.jms.JMSException;
+import javax.naming.NamingException;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -24,10 +26,10 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 public class ClientWindow {
-
-    private ArrayList<String> names;
+    
+    private Client client;
+    private HashMap<String, PollPanel> pollPanelMap;
     private ArrayList<String> comboBoxItems;
-    private Integer cid;
     private JFrame frame;
     private JTextField textFieldName;
     private JTextField textFieldTime;
@@ -49,31 +51,13 @@ public class ClientWindow {
     private ArrayList<String> times;
 
     /**
-     * Launch the application.
-     */
-    public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    ArrayList<String> names = new ArrayList<String>();
-                    names.add("Buzz");
-                    names.add("Woody");
-                    ClientWindow window = new ClientWindow(names, 0);
-                    window.frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    /**
      * Create the application.
      */
-    public ClientWindow(ArrayList<String> names, Integer cid) {
-        this.names = names;
-        this.cid = cid;
+    public ClientWindow(Client client) {
+        this.client = client;
+        this.pollPanelMap = new HashMap<String, PollPanel>();
         initialize();
+        frame.setVisible(true);
     }
 
     /**
@@ -84,8 +68,8 @@ public class ClientWindow {
         frame = new JFrame();
         frame.setBounds(100, 100, 703, 786);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setTitle(names.get(cid) + " - Scheduler Client");
-        comboBoxItems = (ArrayList<String>) names.clone();
+        frame.setTitle(client.getName() + " - Scheduler Client");
+        comboBoxItems = (ArrayList<String>) Client.getNames().clone();
         
         JPanel panel = new JPanel();
         
@@ -291,7 +275,7 @@ public class ClientWindow {
         tableTimes.setModel(tableModelTimes);
         tableModelTimes.fireTableDataChanged();
         
-        comboBoxItems = (ArrayList<String>) names.clone();
+        comboBoxItems = (ArrayList<String>) Client.getNames().clone();
         comboBoxParticipants.setModel(new DefaultComboBoxModel(comboBoxItems.toArray()));
     }
     
@@ -317,14 +301,27 @@ public class ClientWindow {
         tableModelTimes.fireTableDataChanged();
     }
     
-    public void submitForm() {
-        PollPanel panelPoll = new PollPanel();
-        Poll poll = new Poll(textFieldName.getText(), names.get(cid), participants, times);
+    public synchronized void addPoll(Poll poll) {
+        PollPanel panelPoll = this.pollPanelMap.get(poll.getName());
+        if (panelPoll == null) {
+            panelPoll = new PollPanel();
+        }
         panelPoll.setPoll(poll);
-        
         polls.add(panelPoll);
         polls.revalidate();
         polls.repaint();
+    }
+    
+    public synchronized void submitForm() {
+        Poll poll = new Poll(textFieldName.getText(), client.getName(), participants, times);
+        addPoll(poll);
+        try {
+            client.broadcastPoll(poll);
+        } catch (JMSException e) {
+            e.printStackTrace();
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
         resetForm();
     }
 }

@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.ObjectMessage;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
@@ -35,6 +36,7 @@ public class Client {
     private QueueConnectionFactory qcf;
     private QueueConnection cnx;
     private QueueSession session;
+    private ClientWindow clientWindow;
     
     public Client(Integer clientId) throws IOException, NamingException, JMSException {
         this.clientName = names.get(clientId);
@@ -43,22 +45,37 @@ public class Client {
         connect();
     }
     
+    public String getName() {
+        return this.clientName;
+    }
+    
+    public static ArrayList<String> getNames() {
+        return names;
+    }
+    
     public void connect() throws NamingException, JMSException{
-        qcf = (QueueConnectionFactory) ictx.lookup("qcf");
-        cnx = qcf.createQueueConnection();
-        session = cnx.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        this.qcf = (QueueConnectionFactory) ictx.lookup("qcf");
+        this.cnx = qcf.createQueueConnection();
+        this.session = cnx.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
     }
     
     public void init() throws JMSException, NamingException {
-        running = true;
-        cnx.start();
-        broadcast(String.format("Hello world, '%s' is online!", this.clientName));
+        this.running = true;
+        this.cnx.start();
+        new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                clientWindow = new ClientWindow(Client.this);
+            }
+        }).start();
         receive();
     }
     
     public void receive() throws JMSException, NamingException {
         if (receiver == null) {
-            receiver = session.createReceiver(getQueue(this.clientName));
+            QueueSession receiverSession = cnx.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            receiver = receiverSession.createReceiver(getQueue(this.clientName));
         }
         new Thread(new Runnable() {
             
@@ -68,7 +85,13 @@ public class Client {
                     System.out.println(clientName + " receiving...");
                     try {
                         Message msg = receiver.receive();
-                        System.out.printf("Msg received by [%s]: %s\n", clientName, ((TextMessage) msg).getText());
+                        if (msg instanceof TextMessage) {
+                            System.out.printf("Msg received by [%s]: %s\n", clientName, ((TextMessage) msg).getText());
+                        } else if (msg instanceof ObjectMessage) {
+                            clientWindow.addPoll((Poll) ((ObjectMessage) msg).getObject());
+                        } else {
+                            System.out.printf("Msg received by [%s]: %s\n", clientName, msg);
+                        }
                     } catch (JMSException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -78,16 +101,22 @@ public class Client {
         }).start();
     }
     
-    public void broadcast(String message) throws JMSException, NamingException {
+    public void broadcastPoll(Poll poll) throws JMSException, NamingException {
+        broadcast(session.createObjectMessage(poll));
+    }
+    
+    public void broadcastText(String text) throws JMSException, NamingException {
+        broadcast(session.createTextMessage(text));
+    }
+    
+    public void broadcast(Message msg) throws JMSException, NamingException {
         for (String name : names) {
-            sendMessageTo(name, message);
+            sendMessageTo(name, msg);
         }
     }
     
-    public void sendMessageTo(String name, String message) throws JMSException, NamingException {
-        System.out.printf("Sending message to '%s': %s\n", name, message);
-        TextMessage msg = session.createTextMessage();
-        msg.setText(message);
+    public void sendMessageTo(String name, Message msg) throws JMSException, NamingException {
+        System.out.printf("Sending message to '%s': %s\n", name, msg);
         getSender(name).send(msg);
     }
     
