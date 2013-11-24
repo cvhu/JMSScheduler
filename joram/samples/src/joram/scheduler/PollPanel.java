@@ -1,8 +1,12 @@
 package scheduler;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import javax.jms.JMSException;
+import javax.naming.NamingException;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -19,6 +23,8 @@ import javax.swing.table.DefaultTableModel;
 public class PollPanel extends JPanel {
 
     private Poll poll;
+    private Client client;
+    private boolean isOwner;
     private JLabel lblPollName;
     private JLabel lblByUser;
     private JPanel panelParticipants;
@@ -38,7 +44,9 @@ public class PollPanel extends JPanel {
     /**
      * Create the panel.
      */
-    public PollPanel() {
+    public PollPanel(Client client, boolean isOwner) {
+        this.client = client;
+        this.isOwner = isOwner;
         init();
     }
 
@@ -54,30 +62,61 @@ public class PollPanel extends JPanel {
         
         comboBoxTime = new JComboBox();
         
-        btnSubmit = new JButton("Submit");
+        if (isOwner) {
+            btnSubmit = new JButton("Finalize");
+        } else {
+            btnSubmit = new JButton("Vote");
+        }
         
-        lblTime = new JLabel("Choose a meeting time: ");
+        btnSubmit.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                btnSubmit.setEnabled(false);
+                String time = (String) comboBoxTime.getSelectedItem();
+                if (isOwner) {
+                    poll.finalize(time);
+                    btnSubmit.setText("Finalized");
+                } else {
+                    poll.vote(client.getName(), time);
+                    btnSubmit.setText("Voted");
+                }
+                lblTime.setText("Time chosen: ");
+                comboBoxTime.setEnabled(false);
+                comboBoxTime.repaint();
+                setPoll(poll);
+                try {
+                    client.broadcastPoll(poll);
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                } catch (NamingException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        lblTime = new JLabel("Choose a time: ");
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                         .addGroup(groupLayout.createSequentialGroup()
                             .addComponent(lblTime)
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(comboBoxTime, GroupLayout.PREFERRED_SIZE, 208, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(comboBoxTime, GroupLayout.PREFERRED_SIZE, 174, GroupLayout.PREFERRED_SIZE)
+                            .addGap(18)
                             .addComponent(btnSubmit, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGroup(groupLayout.createSequentialGroup()
                             .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                                 .addComponent(lblPollName)
                                 .addComponent(lblByUser))
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(panelParticipants, GroupLayout.PREFERRED_SIZE, 193, GroupLayout.PREFERRED_SIZE)
+                            .addComponent(panelParticipants, GroupLayout.PREFERRED_SIZE, 157, GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(panelTimes, GroupLayout.PREFERRED_SIZE, 198, GroupLayout.PREFERRED_SIZE)))
-                    .addGap(20))
+                            .addComponent(panelTimes, GroupLayout.PREFERRED_SIZE, 153, GroupLayout.PREFERRED_SIZE)))
+                    .addGap(41))
         );
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
@@ -95,7 +134,7 @@ public class PollPanel extends JPanel {
                         .addComponent(lblTime)
                         .addComponent(comboBoxTime, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(btnSubmit, GroupLayout.PREFERRED_SIZE, 29, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap(11, Short.MAX_VALUE))
+                    .addContainerGap(14, Short.MAX_VALUE))
         );
         
         scrollPaneTimes = new JScrollPane();
@@ -121,12 +160,12 @@ public class PollPanel extends JPanel {
             gl_panelParticipants.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panelParticipants.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 184, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 147, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(40, Short.MAX_VALUE))
         );
         gl_panelParticipants.setVerticalGroup(
-            gl_panelParticipants.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, gl_panelParticipants.createSequentialGroup()
+            gl_panelParticipants.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panelParticipants.createSequentialGroup()
                     .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 96, GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
@@ -144,10 +183,18 @@ public class PollPanel extends JPanel {
         this.poll = poll;
         lblPollName.setText(poll.getName());
         lblByUser.setText("by " + poll.getByUser());
-        comboBoxTime.setModel(new DefaultComboBoxModel(poll.getTimes().keySet().toArray()));
-        comboBoxTime.repaint();
         setParticipants();
         setTimes();
+        if (poll.getFinalTime() != null) {
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Finalized");
+            lblTime.setText("Time Chosen:");
+            comboBoxTime.setEnabled(false);
+            comboBoxTime.setSelectedItem(poll.getFinalTime());
+        } else {
+            comboBoxTime.setModel(new DefaultComboBoxModel(poll.getTimes().keySet().toArray()));
+        }
+        comboBoxTime.repaint();
     }
     
     public void setParticipants() {

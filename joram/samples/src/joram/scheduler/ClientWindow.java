@@ -276,6 +276,7 @@ public class ClientWindow {
         tableModelTimes.fireTableDataChanged();
         
         comboBoxItems = (ArrayList<String>) Client.getNames().clone();
+        comboBoxItems.remove(client.getName());
         comboBoxParticipants.setModel(new DefaultComboBoxModel(comboBoxItems.toArray()));
     }
     
@@ -301,10 +302,10 @@ public class ClientWindow {
         tableModelTimes.fireTableDataChanged();
     }
     
-    public synchronized void addPoll(Poll poll) {
+    public synchronized void addPoll(Poll poll, boolean isOwner) {
         PollPanel panelPoll = this.pollPanelMap.get(poll.getName());
         if (panelPoll == null) {
-            panelPoll = new PollPanel();
+            panelPoll = new PollPanel(this.client, isOwner);
         }
         panelPoll.setPoll(poll);
         polls.add(panelPoll);
@@ -314,7 +315,7 @@ public class ClientWindow {
     
     public synchronized void submitForm() {
         Poll poll = new Poll(textFieldName.getText(), client.getName(), participants, times);
-        addPoll(poll);
+        addPoll(poll, true);
         try {
             client.broadcastPoll(poll);
         } catch (JMSException e) {

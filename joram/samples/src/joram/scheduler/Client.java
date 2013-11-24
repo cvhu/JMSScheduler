@@ -88,7 +88,7 @@ public class Client {
                         if (msg instanceof TextMessage) {
                             System.out.printf("Msg received by [%s]: %s\n", clientName, ((TextMessage) msg).getText());
                         } else if (msg instanceof ObjectMessage) {
-                            clientWindow.addPoll((Poll) ((ObjectMessage) msg).getObject());
+                            clientWindow.addPoll((Poll) ((ObjectMessage) msg).getObject(), false);
                         } else {
                             System.out.printf("Msg received by [%s]: %s\n", clientName, msg);
                         }
@@ -102,7 +102,12 @@ public class Client {
     }
     
     public void broadcastPoll(Poll poll) throws JMSException, NamingException {
-        broadcast(session.createObjectMessage(poll));
+        for (String participant : poll.getParticipants().keySet()) {
+            if (!participant.equals(this.clientName)) {
+                sendMessageTo(participant, session.createObjectMessage(poll));
+            }
+        }
+        sendMessageTo(poll.getByUser(), session.createObjectMessage(poll));
     }
     
     public void broadcastText(String text) throws JMSException, NamingException {
@@ -111,7 +116,9 @@ public class Client {
     
     public void broadcast(Message msg) throws JMSException, NamingException {
         for (String name : names) {
-            sendMessageTo(name, msg);
+            if (!name.equals(this.clientName)) {
+                sendMessageTo(name, msg);
+            }
         }
     }
     
@@ -146,6 +153,7 @@ public class Client {
     public static void terminateAll() throws NamingException {
         ictx.close();
     }
+    
 
     public static void main(String[] args) throws Exception{
         if (ictx == null) {
