@@ -196,15 +196,13 @@ public class ClientWindow {
         gl_panelParticipants.setHorizontalGroup(
             gl_panelParticipants.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panelParticipants.createSequentialGroup()
-                    .addGroup(gl_panelParticipants.createParallelGroup(Alignment.TRAILING)
-                        .addGroup(gl_panelParticipants.createSequentialGroup()
-                            .addComponent(comboBoxParticipants, 0, 115, Short.MAX_VALUE)
-                            .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addComponent(btnAddParticipant, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE))
-                        .addGroup(Alignment.LEADING, gl_panelParticipants.createSequentialGroup()
-                            .addGap(6)
-                            .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 156, GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(comboBoxParticipants, 0, 101, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(btnAddParticipant, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
+                .addGroup(Alignment.TRAILING, gl_panelParticipants.createSequentialGroup()
+                    .addContainerGap(14, Short.MAX_VALUE)
+                    .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 156, GroupLayout.PREFERRED_SIZE))
         );
         gl_panelParticipants.setVerticalGroup(
             gl_panelParticipants.createParallelGroup(Alignment.LEADING)
@@ -212,9 +210,9 @@ public class ClientWindow {
                     .addGroup(gl_panelParticipants.createParallelGroup(Alignment.BASELINE)
                         .addComponent(comboBoxParticipants, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(btnAddParticipant))
-                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addPreferredGap(ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
                     .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 230, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addContainerGap())
         );
         panelParticipants.setLayout(gl_panelParticipants);
         

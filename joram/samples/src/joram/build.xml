@@ -11,6 +11,7 @@
     <property name="conf.dir" location="../../config"/>
     <property name="felix.dir" location="${ship.dir}/bin/"/>
     <property name="bundle.dir" location="${ship.dir}/bundle" />
+    <property name="names.txt" location="${src.dir}/names.txt" />
     
     <!-- Project classpath needed for execution -->
     <path id="project.class.path">
@@ -144,6 +145,7 @@
       failonerror="no" fork="yes"
       dir="${run.dir}">
       <classpath path="${project.class.path}"/>
+      <arg value="${names.txt}"/>
       <!-- jvmarg line="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y" / -->
     </java>
   </target>
@@ -154,7 +156,7 @@
     <java classname="scheduler.Client" failonerror="no" fork="yes"
           dir="${run.dir}">
       <classpath path="${project.class.path}"/>
-      <arg value="${src.dir}/names.txt"/>
+      <arg value="${names.txt}"/>
     </java>
   </target>
 
