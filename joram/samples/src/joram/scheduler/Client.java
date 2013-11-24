@@ -38,6 +38,8 @@ public class Client {
     
     public Client(Integer clientId) throws IOException, NamingException, JMSException {
         this.clientName = names.get(clientId);
+        this.queueMap = new HashMap<String, Queue>();
+        this.senderMap = new HashMap<String, QueueSender>();
         connect();
     }
     
@@ -49,6 +51,7 @@ public class Client {
     
     public void init() throws JMSException, NamingException {
         running = true;
+        cnx.start();
         broadcast(String.format("Hello world, '%s' is online!", this.clientName));
         receive();
     }
@@ -62,6 +65,7 @@ public class Client {
             @Override
             public void run() {
                 while (running) {
+                    System.out.println(clientName + " receiving...");
                     try {
                         Message msg = receiver.receive();
                         System.out.printf("Msg received by [%s]: %s\n", clientName, ((TextMessage) msg).getText());
@@ -81,6 +85,7 @@ public class Client {
     }
     
     public void sendMessageTo(String name, String message) throws JMSException, NamingException {
+        System.out.printf("Sending message to '%s': %s\n", name, message);
         TextMessage msg = session.createTextMessage();
         msg.setText(message);
         getSender(name).send(msg);
@@ -125,15 +130,29 @@ public class Client {
         int clientId = 0;
         while (line != null) {
             System.out.println(line);
-            clients.add(new Client(clientId));
             names.add(line);
+            clients.add(new Client(clientId));
             clientId++;
             line = reader.readLine();
         }
         reader.close();
         
-        for (Client client : clients) {
-            client.init();
+        for (final Client client : clients) {
+            new Thread(new Runnable() {
+                
+                @Override
+                public void run() {
+                    try {
+                        client.init();
+                    } catch (JMSException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (NamingException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 
