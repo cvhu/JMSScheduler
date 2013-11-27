@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 target/*
 *.class
 *.jar
 *.properties
 *.xml
+=======
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+>>>>>>> 6f4e43e3a8e4b0021e99edf8c80b8663f6c8a26c
