@@ -1,0 +1,8 @@
+FelixStartLevel WARNING 2013-11-26 22:59:48,285, AgentServer#0, init()
+FelixStartLevel WARNING 2013-11-26 22:59:48,292, Trying to find [a3cmlconfig] using a3-rt [6] class loader.
+FelixStartLevel WARNING 2013-11-26 22:59:48,293, Trying to find serialized config using ClassLoader.getSystemResource().
+FelixStartLevel WARNING 2013-11-26 22:59:48,293, Unable to find configuration file: a3cmlconfig
+FelixStartLevel WARNING 2013-11-26 22:59:48,293, AgentServer#0, serialized a3cmlconfig not found
+FelixStartLevel WARNING 2013-11-26 22:59:48,416, AgentServer#0, initialized at Tue Nov 26 22:59:48 CST 2013
+FelixStartLevel WARNING 2013-11-26 22:59:48,417, AgentServer#0, start()
+FelixStartLevel WARNING 2013-11-26 22:59:48,544, AgentServer#0, started at Tue Nov 26 22:59:48 CST 2013

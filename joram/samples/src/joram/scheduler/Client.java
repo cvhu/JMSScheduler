@@ -88,7 +88,7 @@ public class Client {
                         if (msg instanceof TextMessage) {
                             System.out.printf("Msg received by [%s]: %s\n", clientName, ((TextMessage) msg).getText());
                         } else if (msg instanceof ObjectMessage) {
-                            clientWindow.addPoll((Poll) ((ObjectMessage) msg).getObject(), false);
+                            clientWindow.addPoll((Poll) ((ObjectMessage) msg).getObject());
                         } else {
                             System.out.printf("Msg received by [%s]: %s\n", clientName, msg);
                         }

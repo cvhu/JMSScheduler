@@ -20,23 +20,18 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.table.DefaultTableModel;
 
 @SuppressWarnings("serial")
-public class PollPanel extends JPanel {
+public class PollPanelOld extends JPanel {
 
     private Poll poll;
     private Client client;
     private boolean isOwner;
     private JLabel lblPollName;
     private JLabel lblByUser;
-    private JPanel panelParticipants;
     private JPanel panelTimes;
     private JComboBox comboBoxTime;
     private JButton btnSubmit;
     private JLabel lblTime;
-    private JScrollPane scrollPaneParticipants;
     private JScrollPane scrollPaneTimes;
-    private JTable tableParticipants;
-    private String[] colsParticipants = {"Name", "Vote"};
-    private DefaultTableModel tableModelParticipants;
     private JTable tableTimes;
     private String[] colsTimes = {"Time", "Votes"};
     private DefaultTableModel tableModelTimes;
@@ -44,7 +39,7 @@ public class PollPanel extends JPanel {
     /**
      * Create the panel.
      */
-    public PollPanel(Client client, boolean isOwner) {
+    public PollPanelOld(Client client, boolean isOwner) {
         this.client = client;
         this.isOwner = isOwner;
         init();
@@ -55,8 +50,6 @@ public class PollPanel extends JPanel {
         lblPollName = new JLabel("Poll Name");
         
         lblByUser = new JLabel("by user");
-        
-        panelParticipants = new JPanel();
         
         panelTimes = new JPanel();
         
@@ -115,9 +108,8 @@ public class PollPanel extends JPanel {
                                 .addComponent(lblPollName)
                                 .addComponent(lblByUser))
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(panelParticipants, GroupLayout.PREFERRED_SIZE, 157, GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(panelTimes, GroupLayout.PREFERRED_SIZE, 153, GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(panelTimes, GroupLayout.PREFERRED_SIZE, 353, 400)))
                     .addGap(41))
         );
         groupLayout.setVerticalGroup(
@@ -129,7 +121,6 @@ public class PollPanel extends JPanel {
                             .addComponent(lblPollName)
                             .addPreferredGap(ComponentPlacement.RELATED)
                             .addComponent(lblByUser))
-                        .addComponent(panelParticipants, GroupLayout.PREFERRED_SIZE, 105, GroupLayout.PREFERRED_SIZE)
                         .addComponent(panelTimes, GroupLayout.PREFERRED_SIZE, 105, GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
@@ -156,38 +147,17 @@ public class PollPanel extends JPanel {
         );
         panelTimes.setLayout(gl_panelTimes);
         
-        scrollPaneParticipants = new JScrollPane();
-        GroupLayout gl_panelParticipants = new GroupLayout(panelParticipants);
-        gl_panelParticipants.setHorizontalGroup(
-            gl_panelParticipants.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panelParticipants.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 147, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(40, Short.MAX_VALUE))
-        );
-        gl_panelParticipants.setVerticalGroup(
-            gl_panelParticipants.createParallelGroup(Alignment.TRAILING)
-                .addGroup(gl_panelParticipants.createSequentialGroup()
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(scrollPaneParticipants, GroupLayout.PREFERRED_SIZE, 96, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap())
-        );
-        panelParticipants.setLayout(gl_panelParticipants);
         setLayout(groupLayout);
         
         
         tableTimes = new JTable();
         scrollPaneTimes.setViewportView(tableTimes);
-        tableParticipants = new JTable();
-        scrollPaneParticipants.setViewportView(tableParticipants);
-        
     }
 
     public void setPoll(Poll poll) {
         this.poll = poll;
         lblPollName.setText(poll.getName());
         lblByUser.setText("by " + poll.getByUser());
-        setParticipants();
         setTimes();
         if (poll.getFinalTime() != null) {
             btnSubmit.setEnabled(false);
@@ -199,18 +169,6 @@ public class PollPanel extends JPanel {
             comboBoxTime.setModel(new DefaultComboBoxModel(poll.getTimes().keySet().toArray()));
         }
         comboBoxTime.repaint();
-    }
-    
-    public void setParticipants() {
-        tableModelParticipants = new DefaultTableModel();
-        tableModelParticipants.setColumnIdentifiers(colsParticipants);
-        HashMap<String, String> participants = poll.getParticipants();
-        for (Entry<String, String> entry : participants.entrySet()) {
-            String[] row = {entry.getKey(), entry.getValue()};
-            tableModelParticipants.addRow(row);
-        }
-        tableParticipants.setModel(tableModelParticipants);
-        tableModelParticipants.fireTableDataChanged();
     }
     
     public void setTimes() {

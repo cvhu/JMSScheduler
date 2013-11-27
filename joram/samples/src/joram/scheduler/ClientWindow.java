@@ -28,7 +28,7 @@ import javax.swing.table.DefaultTableModel;
 public class ClientWindow {
     
     private Client client;
-    private HashMap<String, PollPanel> pollPanelMap;
+    private HashMap<String, PollPanelOld> pollPanelMap;
     private ArrayList<String> comboBoxItems;
     private JFrame frame;
     private JTextField textFieldName;
@@ -55,7 +55,7 @@ public class ClientWindow {
      */
     public ClientWindow(Client client) {
         this.client = client;
-        this.pollPanelMap = new HashMap<String, PollPanel>();
+        this.pollPanelMap = new HashMap<String, PollPanelOld>();
         initialize();
         frame.setVisible(true);
     }
@@ -302,12 +302,14 @@ public class ClientWindow {
         tableModelTimes.fireTableDataChanged();
     }
     
-    public synchronized void addPoll(Poll poll, boolean isOwner) {
-        PollPanel panelPoll = this.pollPanelMap.get(poll.getName());
+    public synchronized void addPoll(Poll poll) {
+        PollPanelOld panelPoll = this.pollPanelMap.get(poll.getName());
         if (panelPoll == null) {
-            panelPoll = new PollPanel(this.client, isOwner);
+            boolean isOwner = client.getName().equals(poll.getByUser());
+            panelPoll = new PollPanelOld(this.client, isOwner);
         }
         panelPoll.setPoll(poll);
+        this.pollPanelMap.put(poll.getName(), panelPoll);
         polls.add(panelPoll);
         polls.revalidate();
         polls.repaint();
@@ -315,7 +317,6 @@ public class ClientWindow {
     
     public synchronized void submitForm() {
         Poll poll = new Poll(textFieldName.getText(), client.getName(), participants, times);
-        addPoll(poll, true);
         try {
             client.broadcastPoll(poll);
         } catch (JMSException e) {
